@@ -55,11 +55,27 @@ fn prefix_sum2(array_in: &[i32], array_out: &mut [i32]) -> i32 {
     return acc;
 }
 
+fn prefix_sum_scan(array: &[i32]) -> Vec<i32> {
+    array.iter().scan(0, |sum, x| {
+        *sum += x;
+        Some(*sum)
+    }).collect()
+}
+
+fn prefix_sum_scan2(array_in: &[i32], array_out: &mut [i32]) -> i32 {
+    array_in.iter().scan(0, |sum, x| {
+        *sum += x;
+        Some(*sum)
+    }).enumerate().for_each(|(i, x)| array_out[i] = x);
+    *array_out.last().unwrap()
+}
+
 fn prefix_sum_par(array_in: &[i32], array_out: &mut [i32], max_num_threads: usize) {
     if max_num_threads < 2 || array_in.len() < 2 || max_num_threads > 2 * array_in.len() {
         prefix_sum2(array_in, array_out);
         return;
     }
+
     let chunk_size = array_in.len() / max_num_threads;
     array_in
         .par_chunks(chunk_size)
@@ -78,12 +94,10 @@ fn prefix_sum_par(array_in: &[i32], array_out: &mut [i32], max_num_threads: usiz
         .for_each(|(i, chunk)| {
             chunk.iter_mut().for_each(|x| *x += prefix_partial_sums[i]); 
         });
-
 }
 
 fn make_random_vector<R: rand::Rng>(length: usize, rng: &mut R) -> Vec<i32> {
-    let mut v = vec![0; length];
-    v.iter_mut().map(|_| rng.gen_range(0..10)).collect()
+    (0..length).into_iter().map(|_| rng.gen_range(0..10)).collect()
 }
 
 fn main() {
